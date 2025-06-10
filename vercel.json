@@ -1,11 +1,10 @@
 {
     "version": 2,
     "framework": null,
-    "functions": {
-        "api/index.php": {
-            "runtime": "vercel-php@0.7.1"
-        }
-    },
+    "builds": [
+        { "src": "/api/index.php", "use": "vercel-php@0.7.1" },
+        { "src": "/public/**", "use": "@vercel/static" }
+    ],
     "routes": [
         {
             "src": "/(favicon\\.ico|robots\\.txt)",
@@ -25,7 +24,7 @@
         "APP_NAME": "LuGyi",
         "APP_ENV": "production",
         "APP_DEBUG": "false",
-        "APP_KEY":"base64:7UNwXBE+ydXhViycaiuhKHE8kjDZOLgWD2i+ZkRmGoI=",
+        "APP_KEY": "base64:7UNwXBE+ydXhViycaiuhKHE8kjDZOLgWD2i+ZkRmGoI=",
         "APP_URL": "https://lugyi.vercel.app",
         "VERCEL_DEMO_MODE": "true",
         "APP_CONFIG_CACHE": "/tmp/config.php",
