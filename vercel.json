@@ -20,10 +20,12 @@
             "dest": "/api/index.php"
         }
     ],
+    "outputDirectory": "public/build",
     "env": {
         "APP_NAME": "LuGyi",
         "APP_ENV": "production",
         "APP_DEBUG": "false",
+        "APP_KEY":"base64:7UNwXBE+ydXhViycaiuhKHE8kjDZOLgWD2i+ZkRmGoI=",
         "APP_URL": "https://lugyi.vercel.app",
         "VERCEL_DEMO_MODE": "true",
         "APP_CONFIG_CACHE": "/tmp/config.php",
