@@ -1,13 +1,16 @@
 {
     "version": 2,
     "framework": null,
-    "functions": {
-        "api/index.php": { "runtime": "vercel-php@0.7.1" },
-        "config": {
-            "phpVersion": "8.3",
-            "extensions": ["pgsql"]
+    "builds": [
+        {
+            "src": "api/index.php",
+            "use": "vercel-php@0.7.1",
+            "config": {
+                "phpVersion": "8.3",
+                "extensions": ["pgsql"]
+            }
         }
-    },
+    ],
     "routes": [
         {
             "src": "/(.*)",
