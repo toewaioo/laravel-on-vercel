@@ -19,6 +19,7 @@ Route::get('/upgrade-info', [ContentController::class, 'upgradeInfo']);
 Route::get('/db-con', function () {
     try {
         $dbconnect = DB::connection()->getPDO();
+        //test
         $dbname = DB::connection()->getDatabaseName();
         echo "Connected successfully to the database. Database name is :" . $dbname;
     } catch (Exception $e) {
