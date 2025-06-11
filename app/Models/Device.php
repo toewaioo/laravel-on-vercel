@@ -15,14 +15,19 @@ class Device extends Model
         'device_id',
         'api_token',
         'is_vip',
+        'subscription_key',
         'vip_expires_at'
     ];
 
+    public function subscription()
+    {
+        return $this->belongsTo(Subscription::class, 'subscription_key', 'key');
+    }
     public static function generateToken()
     {
         return bin2hex(random_bytes(32));
     }
-  
+
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
@@ -41,7 +46,7 @@ class Device extends Model
     public function isVip()
     {
         return $this->is_vip && (
-            $this->vip_expires_at === null || 
+            $this->vip_expires_at === null ||
             $this->vip_expires_at > now()
         );
     }

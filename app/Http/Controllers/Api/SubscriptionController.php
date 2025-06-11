@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use App\Models\Device;
 
 class SubscriptionController extends Controller
 {
@@ -13,50 +14,65 @@ class SubscriptionController extends Controller
     public function verifyKey(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'verification_key' => 'required|string|exists:subscriptions,verification_key'
+            'subscription_key' => 'required|string|exists:subscriptions,key',
+            'device_id' => 'required|string'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
 
-        $subscription = Subscription::where('verification_key', $request->verification_key)
-            ->where('is_active', true)
-            ->first();
+        $subscription = Subscription::where('key', $request->subscription_key)->first();
 
-        if (!$subscription) {
-            return response()->json(['error' => 'Invalid or expired verification key'], 400);
+        // Check if subscription can be activated
+        if (!$subscription->canActivate()) {
+            return response()->json([
+                'error' => 'Subscription key limit reached or expired',
+                'max_devices' => $subscription->max_devices,
+                'devices_used' => $subscription->devices_used,
+                'is_active' => $subscription->is_active
+            ], 400);
         }
 
-        // Update device VIP status
-        $device = $subscription->device;
+        // Check if device already used this key
+        $device = Device::where('device_id', $request->device_id)->first();
+        if ($device->subscription_key === $request->subscription_key) {
+            return response()->json(['error' => 'Device already activated with this key'], 400);
+        }
+
+        // Activate VIP for device
         $device->update([
             'is_vip' => true,
-            'vip_expires_at' => $subscription->expires_at
+            'vip_expires_at' => $subscription->expires_at,
+            'subscription_key' => $request->subscription_key
         ]);
 
-        // Deactivate key after use
-        $subscription->update(['is_active' => false]);
+        // Increment key usage
+        $subscription->incrementUsage();
 
         return response()->json([
             'message' => 'VIP subscription activated!',
             'type' => $subscription->type,
             'expires_at' => $subscription->expires_at,
-            'is_lifetime' => $subscription->type === 'lifetime'
+            'devices_remaining' => $subscription->max_devices - $subscription->devices_used
         ]);
     }
 
     public function subscriptionStatus(Request $request)
     {
         $device = $request->device;
-        $subscription = $device->activeSubscription;
+        $subscription = $device->subscription;
 
         return response()->json([
             'is_vip' => $device->isVip(),
             'vip_expires_at' => $device->vip_expires_at,
-            'active_subscription' => $subscription ? [
+            'subscription_key' => $device->subscription_key,
+            'subscription_status' => $device->subscription ? [
+                'key' => $subscription->key,
                 'type' => $subscription->type,
-                'expires_at' => $subscription->expires_at
+                'max_devices' => $subscription->max_devices,
+                'devices_used' => $subscription->devices_used,
+                'is_active' => $subscription->is_active
             ] : null
         ]);
     }

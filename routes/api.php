@@ -1,9 +1,7 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Middleware\ApiTokenAuth;
 use App\Http\Middleware\VipAccess;
@@ -15,7 +13,6 @@ use Illuminate\Support\Facades\DB;
 |--------------------------------------------------------------------------*/
 
 Route::post('/register', [AuthController::class, 'register']);
-Route::get('/upgrade-info', [ContentController::class, 'upgradeInfo']);
 Route::get('/db-con', function () {
     try {
         $dbconnect = DB::connection()->getPDO();
@@ -34,8 +31,12 @@ Route::middleware([ApiTokenAuth::class])->group(function () {
     // Content Access
     Route::get('/contents', [ContentController::class, 'listContents']);
     Route::get('/normal-contents', [ContentController::class, 'normalContents']);
-    Route::get('/contents/{id}', [ContentController::class, 'getContentDetails']);
-
+    Route::get('/contents/{id}', [ContentController::class, 'getContentDetails'])->where('id', '[0-9]+');
+    Route::get('/contents/tag/{tag}', [ContentController::class, 'getContentsByTag']);
+    Route::get('/contents/category/{category}', [ContentController::class, 'getContentsByCategory']);
+    Route::get('/contents/search', [ContentController::class, 'searchContents']);
+    Route::get('/contents/latest', [ContentController::class, 'latestContents']);
+    Route::get('/contents/home', [ContentController::class, 'getHomeContents']);
     // Subscription Management
     Route::post('/verify-key', [SubscriptionController::class, 'verifyKey']);
     Route::get('/subscription-status', [SubscriptionController::class, 'subscriptionStatus']);
@@ -65,6 +66,7 @@ Route::prefix('admin')->group(function () {
     // Subscription Management
     Route::get('/subscriptions', [AdminController::class, 'listSubscriptions']);
     Route::put('/subscriptions/{id}/deactivate', [AdminController::class, 'deactivateSubscription']);
+    Route::get('/subscription-keys', [AdminController::class, 'listSubscriptionKeys']);
 });
 
 /*--------------------------------------------------------------------------

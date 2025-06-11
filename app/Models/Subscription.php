@@ -5,13 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
+
 class Subscription extends Model
 {
     //
     use HasFactory;
 
     protected $fillable = [
-        'device_id',
+        'key',
+        'max_devices',
+        'devices_used',
         'type',
         'expires_at',
         'verification_key',
@@ -20,7 +23,9 @@ class Subscription extends Model
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'devices_used' => 'integer'
     ];
+
     public function device()
     {
         return $this->belongsTo(Device::class);
@@ -43,5 +48,20 @@ class Subscription extends Model
             default:
                 return now()->addMonth();
         }
+    }
+    public function canActivate()
+    {
+        return $this->is_active &&
+            ($this->max_devices > $this->devices_used) &&
+            (!$this->expires_at || $this->expires_at->gt(now()));
+    }
+
+    public function incrementUsage()
+    {
+        $this->devices_used++;
+        if ($this->devices_used >= $this->max_devices) {
+            $this->is_active = false;
+        }
+        $this->save();
     }
 }

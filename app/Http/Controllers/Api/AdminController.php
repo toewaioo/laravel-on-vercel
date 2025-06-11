@@ -8,6 +8,7 @@ use App\Models\Device;
 use App\Models\Content;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\Validator;
+
 class AdminController extends Controller
 {
     public function deactivateSubscription(Request $request, $id)
@@ -21,28 +22,45 @@ class AdminController extends Controller
     public function createSubscriptionKey(Request $request)
     {
         $request->validate([
-            'device_id' => 'required|exists:devices,device_id',
-            'type' => 'required|in:1month,3months,lifetime'
+            'type' => 'required|in:1month,3months,lifetime',
+            'max_devices' => 'required|integer|min:1|max:5' // Max 5 devices per key
         ]);
 
-        $device = Device::where('device_id', $request->device_id)->first();
-
         $subscription = Subscription::create([
-            'device_id' => $device->id,
+            'key' => Subscription::generateVerificationKey(),
             'type' => $request->type,
             'expires_at' => Subscription::calculateExpiration($request->type),
-            'verification_key' => Subscription::generateVerificationKey(),
+            'max_devices' => $request->max_devices,
+            'devices_used' => 0,
             'is_active' => true
         ]);
 
         return response()->json([
             'message' => 'Subscription key created',
-            'verification_key' => $subscription->verification_key,
+            'key' => $subscription->key,
             'type' => $subscription->type,
+            'max_devices' => $subscription->max_devices,
             'expires_at' => $subscription->expires_at
         ]);
     }
 
+    public function listSubscriptionKeys()
+    {
+        $keys = Subscription::all();
+
+        return response()->json([
+            'subscription_keys' => $keys->map(function ($key) {
+                return [
+                    'key' => $key->key,
+                    'type' => $key->type,
+                    'max_devices' => $key->max_devices,
+                    'devices_used' => $key->devices_used,
+                    'is_active' => $key->is_active,
+                    'expires_at' => $key->expires_at
+                ];
+            })
+        ]);
+    }
     public function upgradeToVip(Request $request)
     {
         $request->validate([
@@ -74,7 +92,11 @@ class AdminController extends Controller
             'links' => 'nullable|array',
             'content' => 'required|string',
             'tags' => 'nullable|array',
-            'isvip' => 'required|boolean'
+            'isvip' => 'required|boolean',
+            'files' => 'nullable|array',
+            'files.trailer' => 'nullable|url',
+            'files.stream' => 'nullable|url',
+            'files.download' => 'nullable|url'
         ]);
 
         $content = Content::create($request->all());

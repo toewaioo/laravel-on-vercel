@@ -17,11 +17,13 @@ class Content extends Model
         'links',
         'content',
         'tags',
-        'isvip'
+        'isvip',
+        'files'
     ];
 
     protected $casts = [
         'tags' => 'array',
-        'links' => 'array'
+        'links' => 'array',
+        'files' => 'array',
     ];
 }

@@ -16,9 +16,13 @@ return new class extends Migration
             $table->string('title');
             $table->string('profileImg')->nullable();
             $table->string('coverImg')->nullable();
+            $table->string("duration")->nullable();
             $table->json('links')->nullable();
             $table->text('content');
             $table->json('tags')->nullable();
+            $table->string('category')->nullable();
+            $table->json("casts")->nullable();
+            $table->json('files')->nullable();
             $table->boolean('isvip')->default(false);
             $table->timestamps();
         });

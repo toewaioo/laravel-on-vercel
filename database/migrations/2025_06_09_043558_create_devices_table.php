@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('device_id')->unique();
             $table->string('api_token', 64)->unique();
+            $table->string('subscription_key')->nullable();
             $table->boolean('is_vip')->default(false);
             $table->timestamp('vip_expires_at')->nullable();
             $table->timestamps();
