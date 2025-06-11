@@ -14,7 +14,7 @@
     "env": {
         "APP_NAME": "LuGyi",
         "APP_ENV": "production",
-        "APP_DEBUG": "true",
+        "APP_DEBUG": "false",
         "APP_KEY": "base64:7UNwXBE+ydXhViycaiuhKHE8kjDZOLgWD2i+ZkRmGoI=",
         "APP_URL": "https://lugyi.vercel.app",
         "VERCEL_DEMO_MODE": "true",
@@ -23,6 +23,7 @@
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
         "APP_ROUTES_CACHE": "/tmp/routes.php",
         "APP_SERVICES_CACHE": "/tmp/services.php",
+        "VIEW_COMPILED_PATH":"/tmp",
         "CACHE_DRIVER": "array",
         "LOG_CHANNEL": "stderr",
         "SESSION_DRIVER": "cookie"
