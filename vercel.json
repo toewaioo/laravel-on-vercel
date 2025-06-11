@@ -4,10 +4,10 @@
     "builds": [
         {
             "src": "api/index.php",
-            "use": "vercel-php@0.7.1",
+            "use": "vercel-php@0.6.0",
             "config": {
                 "phpVersion": "8.3",
-                "extensions": ["pgsql"]
+                "extensions": ["pgsql", "pdo_pgsql", "curl"]
             }
         }
     ],
