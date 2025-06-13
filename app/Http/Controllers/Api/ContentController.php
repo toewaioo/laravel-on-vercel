@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Content;
 
+use Illuminate\Support\Str;
+
 class ContentController extends Controller
 {
     public function getHomeContents(Request $request)
@@ -36,20 +38,39 @@ class ContentController extends Controller
 
         return response()->json(array_merge($results, ['pagination' => $pagination]));
     }
-
     public function getContentsByCategory(Request $request, $category)
     {
-        // Get pagination parameters (default: page=1, per_page=15)
+        $request->validate([
+            'show_vip' => 'sometimes|boolean',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+            'page' => 'sometimes|integer|min:1'
+        ]);
+    
+        // Proper boolean conversion
+        $showVipOnly = filter_var($request->query('show_vip', false), FILTER_VALIDATE_BOOLEAN);
         $perPage = $request->query('per_page', 15);
         $page = $request->query('page', 1);
-
-        // Search for contents with the category
-        $contents = Content::where('category', $category)
-            ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'isvip', 'created_at')
-            ->paginate($perPage, ['*'], 'page', $page);
-
+        $device = $request->device;
+    
+        $query = Content::where('category', $category)
+            ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'isvip', 'created_at');
+    
+        if ($showVipOnly) {
+            $query->where('isvip', true);
+        }
+    
+        // if (!$device || !$device->isVip()) {
+        //     $query->where('isvip', false);
+        // }
+    
+        $contents = $query->paginate($perPage, ['*'], 'page', $page);
+    
         return response()->json([
             'category' => $category,
+            'filter' => [
+                'vip_only' => $showVipOnly,
+                'user_has_vip_access' => $device && $device->isVip()
+            ],
             'contents' => $contents->items(),
             'pagination' => [
                 'total' => $contents->total(),
@@ -61,6 +82,31 @@ class ContentController extends Controller
             ]
         ]);
     }
+
+    // public function getContentsByCategory(Request $request, $category)
+    // {
+    //     // Get pagination parameters (default: page=1, per_page=15)
+    //     $perPage = $request->query('per_page', 15);
+    //     $page = $request->query('page', 1);
+
+    //     // Search for contents with the category
+    //     $contents = Content::where('category', $category)
+    //         ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'isvip', 'created_at')
+    //         ->paginate($perPage, ['*'], 'page', $page);
+
+    //     return response()->json([
+    //         'category' => $category,
+    //         'contents' => $contents->items(),
+    //         'pagination' => [
+    //             'total' => $contents->total(),
+    //             'per_page' => $contents->perPage(),
+    //             'current_page' => $contents->currentPage(),
+    //             'last_page' => $contents->lastPage(),
+    //             'from' => $contents->firstItem(),
+    //             'to' => $contents->lastItem()
+    //         ]
+    //     ]);
+    // }
     public function getContentsByTag(Request $request, $tag)
     {
         // Get pagination parameters (default: page=1, per_page=15)
@@ -95,28 +141,88 @@ class ContentController extends Controller
         return response()->json($contents);
     }
 
+    // Update getContentDetails method
     public function getContentDetails(Request $request, $id)
     {
-        $content = Content::findOrFail($id);
+        $content = Content::withCount('views')->findOrFail($id);
+        $device = $request->device;
 
         // Check VIP access
-        if ($content->isvip && !$request->device->is_vip) {
+        if ($content->isvip && (!$device || !$device->isVip())) {
             return response()->json([
                 'error' => 'VIP content requires VIP access',
-                'upgrade_url' => '/api/upgrade-info'
+                'upgrade_url' => '/api/upgrade-info',
+
             ], 403);
         }
-        // $response = [
-        //     'content' => $content->makeHidden(['created_at', 'updated_at']),
-        //     'subscription_status' => $this->getSubscriptionStatus($device)
-        // ];
+        // Get related content (by tags)
+        $relatedContent = $this->getRelatedContent($content);
+        $response = [
+            'content' => $content->makeHidden(['created_at', 'updated_at']),
+            'views_count' => $content->views_count,
+            'related_content' => $relatedContent,
 
-        // // Hide files for non-VIP if content is VIP
-        // if ($content->isvip && !$device->isVip()) {
-        //     $response['content'] = $content->makeHidden(['files', 'created_at', 'updated_at']);
-        // }
+        ];
 
-        return response()->json($content);
+        return response()->json($response);
+    }
+    private function getRelatedContent(Content $content, $limit = 5)
+    {
+        $query = Content::where('id', '!=', $content->id);
+
+        // Match by category if exists
+        if ($content->category) {
+            $query->where('category', $content->category);
+        }
+
+        // Match by tags if exists
+        if (!empty($content->tags)) {
+            $query->orWhere(function ($q) use ($content) {
+                foreach ($content->tags as $tag) {
+                    $q->orWhereJsonContains('tags', $tag);
+                }
+            });
+        }
+
+        return $query->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'category', 'created_at')
+            ->limit($limit)
+            ->get()
+            ->map(function ($item) {
+                return $this->formatRelatedContent($item);
+            });
+    }
+    private function formatRelatedContent($content)
+    {
+        return [
+            'id' => $content->id,
+            'title' => $content->title,
+            'profileImg' => $content->profileImg,
+            'coverImg' => $content->coverImg,
+            'isvip' => $content->isvip,
+            'tags' => $content->tags,
+            'short_description' => Str::limit($content->content, 100)
+        ];
+    }
+
+    // Add new method for view statistics
+    public function getContentViews($id)
+    {
+        $content = Content::with(['views' => function ($query) {
+            $query->latest()->take(100);
+        }])->findOrFail($id);
+
+        return response()->json([
+            'content_id' => $content->id,
+            'total_views' => $content->views->count(),
+            'recent_views' => $content->views->map(function ($view) {
+                return [
+                    'viewed_at' => $view->created_at,
+                    'device' => $view->device ? $view->device->device_id : null,
+                    'ip_address' => $view->ip_address,
+                    'user_agent' => $view->user_agent
+                ];
+            })
+        ]);
     }
 
     public function normalContents(Request $request)

@@ -26,4 +26,15 @@ class Content extends Model
         'links' => 'array',
         'files' => 'array',
     ];
+    // Add this relationship
+    public function views()
+    {
+        return $this->hasMany(ContentView::class);
+    }
+
+    // Add this method
+    public function getViewCountAttribute()
+    {
+        return $this->views()->count();
+    }
 }

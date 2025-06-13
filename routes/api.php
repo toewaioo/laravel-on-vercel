@@ -7,7 +7,9 @@ use App\Http\Middleware\ApiTokenAuth;
 use App\Http\Middleware\VipAccess;
 use App\Http\Controllers\Api\ContentController;
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Middleware\TrackContentView;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Api\CategoryController;
 /*--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------*/
@@ -24,14 +26,29 @@ Route::get('/db-con', function () {
     }
 });
 
+// Category Routes
+Route::prefix('categories')->group(function () {
+    Route::get('/', [CategoryController::class, 'index']);
+    Route::post('/', [CategoryController::class, 'store']);
+    Route::get('/{id}', [CategoryController::class, 'show']);
+    Route::put('/{id}', [CategoryController::class, 'update']);
+    Route::delete('/{id}', [CategoryController::class, 'destroy']);
+});
+
 /*--------------------------------------------------------------------------
 | Authenticated Routes (API Token Required)
 |--------------------------------------------------------------------------*/
+// Add these routes
+Route::middleware([ApiTokenAuth::class,TrackContentView::class])->group(function () {
+    Route::get('/contents/{id}', [ContentController::class, 'getContentDetails'])
+        ->name('contents')->where('id', '[0-9]+');
+});
 Route::middleware([ApiTokenAuth::class])->group(function () {
     // Content Access
     Route::get('/contents', [ContentController::class, 'listContents']);
     Route::get('/normal-contents', [ContentController::class, 'normalContents']);
-    Route::get('/contents/{id}', [ContentController::class, 'getContentDetails'])->where('id', '[0-9]+');
+    Route::get('/contents/{id}/views', [ContentController::class, 'getContentViews']);
+    // Route::get('/contents/{id}', [ContentController::class, 'getContentDetails'])->where('id', '[0-9]+');
     Route::get('/contents/tag/{tag}', [ContentController::class, 'getContentsByTag']);
     Route::get('/contents/category/{category}', [ContentController::class, 'getContentsByCategory']);
     Route::get('/contents/search', [ContentController::class, 'searchContents']);
