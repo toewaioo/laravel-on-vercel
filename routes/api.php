@@ -76,6 +76,8 @@ Route::prefix('admin')->group(function () {
     Route::post('/create-key', [AdminController::class, 'createSubscriptionKey']);
 
     // Content Management
+
+    Route::post('/create-contents', [AdminController::class, 'store']);
     Route::post('/contents', [AdminController::class, 'createContent']);
     Route::put('/contents/{id}', [AdminController::class, 'updateContent']);
     Route::delete('/contents/{id}', [AdminController::class, 'deleteContent']);

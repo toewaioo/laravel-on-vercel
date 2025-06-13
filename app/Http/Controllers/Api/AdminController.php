@@ -83,6 +83,49 @@ class AdminController extends Controller
             'expires_at' => $expiresAt
         ]);
     }
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'profileImg' => 'nullable|string',
+            'coverImg' => 'nullable|string',
+            'duration' => 'nullable|string',
+            'links' => 'nullable|array',
+            'links.*' => 'url',
+            'content' => 'required|string',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
+            'category' => 'nullable|string|max:100',
+            'casts' => 'nullable|array',
+            'casts.*.name' => 'required|string|max:100',
+            'casts.*.role' => 'required|string|max:100',
+            'files' => 'nullable|array',
+            'files.traller' => 'nullable|array',
+            'files.traller.url' => 'nullable|url',
+            'files.traller.quality' => 'nullable|string',
+            'files.traller.size' => 'nullable|string',
+            'files.stream' => 'nullable|array',
+            'files.stream.*.url' => 'nullable|url',
+            'files.stream.*.quality' => 'nullable|string',
+            'files.stream.*.size' => 'nullable|string',
+            'files.download' => 'nullable|array',
+            'files.download.*.url' => 'nullable|url',
+            'files.download.*.quality' => 'nullable|string',
+            'files.download.*.size' => 'nullable|string',
+            'isvip' => 'sometimes|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $content = Content::create($request->all());
+
+        return response()->json([
+            'message' => 'Content created successfully',
+            'data' => $content
+        ], 201);
+    }
     public function createContent(Request $request)
     {
         $request->validate([

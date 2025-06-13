@@ -68,7 +68,9 @@ class ContentFactory extends Factory
 
             'files' => json_encode([
                 'traller' => ['url' => $this->faker->url(), "quality" => "1080p", "size" => "500MB"],
-                'stream' => ['url' => $this->faker->url(), "quality" => "720p", "size" => "2GB"],
+                'stream' => collect(range(1, rand(1, 4)))->map(function () {
+                    return ['url' => $this->faker->url(), "quality" => $this->faker->randomElement(['480p', '720p', '1080p']), "size" => $this->faker->numberBetween(500, 5000) . 'MB'];
+                })->toArray(),
                 'download' => collect(range(1, rand(1, 4)))->map(function () {
                     return ['url' => $this->faker->url(), "quality" => $this->faker->randomElement(['480p', '720p', '1080p']), "size" => $this->faker->numberBetween(500, 5000) . 'MB'];
                 })->toArray(),
