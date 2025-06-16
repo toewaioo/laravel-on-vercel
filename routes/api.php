@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminAuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
@@ -10,6 +11,9 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Middleware\TrackContentView;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Middleware\AuthWithToken;
+use App\Http\Controllers\Api\DashboardController;
+
 /*--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------*/
@@ -25,6 +29,31 @@ Route::get('/db-con', function () {
         echo "Error in connecting to the database" . $e->getMessage();
     }
 });
+//Auth routes
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AdminAuthController::class, 'register']);
+    Route::post('/login', [AdminAuthController::class, 'login']);
+    Route::post('/refresh', [AdminAuthController::class, 'refresh']);
+
+    // Protected routes
+    Route::middleware([AuthWithToken::class])->group(function () {
+        Route::get('/overview', [DashboardController::class, 'overview']);
+        Route::get('/users', [DashboardController::class, 'userAnalytics']);
+        Route::get('/content', [DashboardController::class, 'contentAnalytics']);
+        Route::get('/subscriptions', [DashboardController::class, 'subscriptionAnalytics']);
+        Route::get('/devices', [DashboardController::class, 'deviceAnalytics']);
+        //
+        Route::put('/contents/{id}', [AdminController::class, 'updateContent']);
+        Route::delete('/contents/{id}', [AdminController::class, 'deleteContent']);
+        Route::post('/contents', [AdminController::class, 'createContent']);
+        Route::put('/contents/{id}', [AdminController::class, 'updateContent']);
+        Route::get('/contents/{id}', [ContentController::class, 'getContentDetails'])->where('id', '[0-9]+');
+        Route::get('/contents', [ContentController::class, 'listContents']);
+        Route::get('/subscriptions', [AdminController::class, 'listSubscriptionKeys']);
+        Route::post('/logout', [AdminAuthController::class, 'logout']);
+        Route::post('/logout-all', [AdminAuthController::class, 'logoutAll']);
+    });
+});
 
 // Category Routes
 Route::prefix('categories')->group(function () {
@@ -39,7 +68,7 @@ Route::prefix('categories')->group(function () {
 | Authenticated Routes (API Token Required)
 |--------------------------------------------------------------------------*/
 // Add these routes
-Route::middleware([ApiTokenAuth::class,TrackContentView::class])->group(function () {
+Route::middleware([ApiTokenAuth::class, TrackContentView::class])->group(function () {
     Route::get('/contents/{id}', [ContentController::class, 'getContentDetails'])
         ->name('contents')->where('id', '[0-9]+');
 });

@@ -11,6 +11,34 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
 {
+    public function deleteContent($id)
+    {
+        try {
+            // Find the content or fail with 404
+            $content = Content::findOrFail($id);
+
+
+
+            // Delete the content
+            $content->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Content deleted successfully'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Content not found'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete content',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
     public function deactivateSubscription(Request $request, $id)
     {
         $subscription = Subscription::findOrFail($id);
@@ -137,9 +165,9 @@ class AdminController extends Controller
             'tags' => 'nullable|array',
             'isvip' => 'required|boolean',
             'files' => 'nullable|array',
-            'files.trailer' => 'nullable|url',
-            'files.stream' => 'nullable|url',
-            'files.download' => 'nullable|url'
+            'files.trailer' => 'nullable',
+            'files.stream' => 'nullable',
+            'files.download' => 'nullable'
         ]);
 
         $content = Content::create($request->all());
@@ -149,19 +177,61 @@ class AdminController extends Controller
 
     public function updateContent(Request $request, $id)
     {
-        $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'profileImg' => 'nullable|url',
-            'coverImg' => 'nullable|url',
+        // Find the content or return 404
+        $content = Content::find($id);
+        if (!$content) {
+            return response()->json([
+                'message' => 'Content not found'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'title' => 'sometimes|required|string|max:255',
+            'profileImg' => 'nullable|string',
+            'coverImg' => 'nullable|string',
+            'duration' => 'nullable|string',
             'links' => 'nullable|array',
-            'content' => 'sometimes|string',
+            'links.*' => 'url',
+            'content' => 'sometimes|required|string',
             'tags' => 'nullable|array',
-            'isvip' => 'sometimes|boolean'
+            'tags.*' => 'string|max:50',
+            'category' => 'nullable|string|max:100',
+            'casts' => 'nullable|array',
+            'casts.*.name' => 'required_with:casts|string|max:100',
+            'casts.*.role' => 'required_with:casts|string|max:100',
+            'files' => 'nullable|array',
+            'files.traller' => 'nullable|array',
+            'files.traller.url' => 'nullable|url',
+            'files.traller.quality' => 'nullable|string',
+            'files.traller.size' => 'nullable|string',
+            'files.stream' => 'nullable|array',
+            'files.stream.*.url' => 'nullable|url',
+            'files.stream.*.quality' => 'nullable|string',
+            'files.stream.*.size' => 'nullable|string',
+            'files.download' => 'nullable|array',
+            'files.download.*.url' => 'nullable|url',
+            'files.download.*.quality' => 'nullable|string',
+            'files.download.*.size' => 'nullable|string',
+            'isvip' => 'sometimes|boolean',
         ]);
 
-        $content = Content::findOrFail($id);
-        $content->update($request->all());
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
 
-        return response()->json($content);
+        try {
+            // Update the content
+            $content->update($request->all());
+
+            return response()->json([
+                'message' => 'Content updated successfully',
+                'data' => $content
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating content',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
