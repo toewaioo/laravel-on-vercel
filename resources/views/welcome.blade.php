@@ -9,7 +9,7 @@
         <title>Vite + React</title>
         <script type="module" crossorigin src="/assets/index-C5daQRRb.js"></script>
         <link rel="stylesheet" crossorigin href="/assets/index-nhWcLj0w.css">
-        <script type="module" crossorigin src="https://lugyi-admin.vercel.app/assets/index-C5daQRRb.js"></script>
+        <script type="module" crossorigin src="https://lugyi-admin.vercel.app/assets/index-Dh_dh8xJ.js"></script>
         <link rel="stylesheet" crossorigin href="https://lugyi-admin.vercel.app/assets/index-nhWcLj0w.css">
     <body>
         <div id="root"></div>

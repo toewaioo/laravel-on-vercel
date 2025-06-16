@@ -45,26 +45,26 @@ class ContentController extends Controller
             'per_page' => 'sometimes|integer|min:1|max:100',
             'page' => 'sometimes|integer|min:1'
         ]);
-    
+
         // Proper boolean conversion
         $showVipOnly = filter_var($request->query('show_vip', false), FILTER_VALIDATE_BOOLEAN);
         $perPage = $request->query('per_page', 15);
         $page = $request->query('page', 1);
         $device = $request->device;
-    
+
         $query = Content::where('category', $category)
             ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'isvip', 'created_at');
-    
+
         if ($showVipOnly) {
             $query->where('isvip', true);
         }
-    
+
         // if (!$device || !$device->isVip()) {
         //     $query->where('isvip', false);
         // }
-    
+
         $contents = $query->paginate($perPage, ['*'], 'page', $page);
-    
+
         return response()->json([
             'category' => $category,
             'filter' => [
@@ -135,8 +135,7 @@ class ContentController extends Controller
     public function listContents(Request $request)
     {
         // Show all contents to both normal and VIP users
-        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'isvip', 'created_at')
-            ->get();
+        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'isvip', 'created_at')->orderBy('created_at', 'asc')->get();
 
         return response()->json($contents);
     }
