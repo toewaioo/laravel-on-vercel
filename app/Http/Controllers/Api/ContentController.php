@@ -119,7 +119,7 @@ class ContentController extends Controller
 
         // Search for contents with the tag
         $contents = Content::whereJsonContains('tags', $tag)
-            ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'isvip', 'created_at')
+            ->select('id', 'title', 'profileImg', 'coverImg', 'tags','content', 'isvip', 'created_at')
             ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
@@ -139,7 +139,9 @@ class ContentController extends Controller
     public function listContents(Request $request)
     {
         // Show all contents to both normal and VIP users
-        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'category', 'duration', 'isvip', 'created_at')->orderBy('created_at', 'desc')->get();
+        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'category', 'duration', 'isvip', 'created_at')
+        ->orderBy('created_at', 'desc')
+        ->paginate(15, ['*'], 'page', $request->query('page', 1));
 
         return response()->json($contents);
     }
