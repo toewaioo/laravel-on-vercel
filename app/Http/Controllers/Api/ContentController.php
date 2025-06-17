@@ -32,6 +32,7 @@ class ContentController extends Controller
 
         $vipContents = Content::where('isvip', true)
             ->select($selectColumns)
+            ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
         $categories = Category::all();
 
