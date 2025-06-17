@@ -8,6 +8,7 @@ use App\Models\Content;
 
 use Illuminate\Support\Str;
 use App\Models\Category;
+use App\Models\Device;
 class ContentController extends Controller
 {
     public function getHomeContents(Request $request)
@@ -36,9 +37,12 @@ class ContentController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
         $categories = Category::all();
+        $token = $request->bearerToken();
+        $device = Device::where('api_token', $token)->first();
 
         $results['vip_contents'] = $vipContents->items();
         $results['categories'] = $categories;
+        $results['device'] = $device;
 
         return response()->json(array_merge($results, ['pagination' => $pagination]));
     }
