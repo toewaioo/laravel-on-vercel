@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Content;
 
 use Illuminate\Support\Str;
-
+use App\Models\Category;
 class ContentController extends Controller
 {
     public function getHomeContents(Request $request)
@@ -33,8 +33,10 @@ class ContentController extends Controller
         $vipContents = Content::where('isvip', true)
             ->select($selectColumns)
             ->paginate($perPage, ['*'], 'page', $page);
+        $categories = Category::all();
 
         $results['vip_contents'] = $vipContents->items();
+        $results['categories'] = $categories;
 
         return response()->json(array_merge($results, ['pagination' => $pagination]));
     }
@@ -135,7 +137,7 @@ class ContentController extends Controller
     public function listContents(Request $request)
     {
         // Show all contents to both normal and VIP users
-        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content','category','duration', 'isvip', 'created_at')->orderBy('created_at', 'asc')->get();
+        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'category', 'duration', 'isvip', 'created_at')->orderBy('created_at', 'asc')->get();
 
         return response()->json($contents);
     }
