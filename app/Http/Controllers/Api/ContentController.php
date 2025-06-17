@@ -57,7 +57,7 @@ class ContentController extends Controller
         $device = $request->device;
 
         $query = Content::where('category', $category)
-            ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'isvip', 'created_at');
+            ->select('id', 'title', 'profileImg', 'coverImg','content', 'tags', 'isvip', 'created_at')->orderBy('created_at', 'desc');
 
         if ($showVipOnly) {
             $query->where('isvip', true);
@@ -139,7 +139,7 @@ class ContentController extends Controller
     public function listContents(Request $request)
     {
         // Show all contents to both normal and VIP users
-        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'category', 'duration', 'isvip', 'created_at')->orderBy('created_at', 'asc')->get();
+        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'category', 'duration', 'isvip', 'created_at')->orderBy('created_at', 'desc')->get();
 
         return response()->json($contents);
     }
