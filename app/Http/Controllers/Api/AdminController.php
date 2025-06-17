@@ -8,9 +8,137 @@ use App\Models\Device;
 use App\Models\Content;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
+    public function listDevices(Request $request)
+    {
+        $perPage = $request->query('per_page', 20);
+        $page = $request->query('page', 1);
+
+        $devices = Device::query()
+            ->when($request->has('vip'), function ($q) use ($request) {
+                $q->where('is_vip', filter_var($request->vip, FILTER_VALIDATE_BOOLEAN));
+            })
+            ->when($request->has('platform'), function ($q) use ($request) {
+                $q->where('platform', $request->platform);
+            })
+            ->when($request->has('user'), function ($q) use ($request) {
+                $q->where('user_identifier', $request->user);
+            })
+            ->when($request->has('active'), function ($q) {
+                $q->where('last_active_at', '>', now()->subDays(30));
+            })
+            ->orderBy('last_active_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'devices' => $devices->items(),
+            'pagination' => [
+                'total' => $devices->total(),
+                'per_page' => $devices->perPage(),
+                'current_page' => $devices->currentPage(),
+                'last_page' => $devices->lastPage()
+            ]
+        ]);
+    }
+
+    public function getDevice($device_id)
+    {
+        $device = Device::with(['user', 'subscription'])
+            ->where('device_id', $device_id)
+            ->firstOrFail();
+
+        return response()->json([
+            'device' => $device,
+            'views_count' => $device->views()->count(),
+            'is_active' => $device->last_active_at > now()->subDays(30)
+        ]);
+    }
+
+    public function setVipStatus(Request $request, $device_id)
+    {
+        $request->validate([
+            'is_vip' => 'required|boolean',
+            'expires_at' => 'nullable|date'
+        ]);
+
+        $device = Device::where('device_id', $device_id)->firstOrFail();
+
+        $device->update([
+            'is_vip' => $request->is_vip,
+            'vip_expires_at' => $request->expires_at
+        ]);
+
+        return response()->json([
+            'message' => 'VIP status updated',
+            'device' => [
+                'device_id' => $device->device_id,
+                'is_vip' => $device->is_vip,
+                'vip_expires_at' => $device->vip_expires_at
+            ]
+        ]);
+    }
+
+    public function deleteDevice($device_id)
+    {
+        $device = Device::where('device_id', $device_id)->firstOrFail();
+        $device->delete();
+
+        return response()->json(['message' => 'Device deleted successfully']);
+    }
+    public function getContentDetails(Request $request, $id)
+    {
+        $content = Content::withCount('views')->findOrFail($id);
+
+        $relatedContent = $this->getRelatedContent($content);
+        $response = [
+            'content' => $content->makeHidden(['created_at', 'updated_at']),
+            'views_count' => $content->views_count,
+            'related_content' => $relatedContent,
+
+        ];
+
+        return response()->json($response);
+    }
+    private function getRelatedContent(Content $content, $limit = 5)
+    {
+        $query = Content::where('id', '!=', $content->id);
+
+        // Match by category if exists
+        if ($content->category) {
+            $query->where('category', $content->category);
+        }
+
+        // Match by tags if exists
+        if (!empty($content->tags)) {
+            $query->orWhere(function ($q) use ($content) {
+                foreach ($content->tags as $tag) {
+                    $q->orWhereJsonContains('tags', $tag);
+                }
+            });
+        }
+
+        return $query->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'category', 'created_at')
+            ->limit($limit)
+            ->get()
+            ->map(function ($item) {
+                return $this->formatRelatedContent($item);
+            });
+    }
+    private function formatRelatedContent($content)
+    {
+        return [
+            'id' => $content->id,
+            'title' => $content->title,
+            'profileImg' => $content->profileImg,
+            'coverImg' => $content->coverImg,
+            'isvip' => $content->isvip,
+            'tags' => $content->tags,
+            'short_description' => Str::limit($content->content, 100)
+        ];
+    }
     public function deleteContent($id)
     {
         try {
@@ -41,10 +169,12 @@ class AdminController extends Controller
     }
     public function deactivateSubscription(Request $request, $id)
     {
-        $subscription = Subscription::findOrFail($id);
+        $subscription = Subscription::where("key", $id)->first();
         $subscription->update(['is_active' => false]);
-
-        return response()->json(['message' => 'Subscription deactivated successfully']);
+        if (!$subscription) {
+            return response()->json(['message' => 'Subscription not found'], 404);
+        }
+        return response()->json(["subscription" => $subscription    , 'message' => 'Subscription deactivated successfully']);
     }
     //
     public function createSubscriptionKey(Request $request)
@@ -67,8 +197,11 @@ class AdminController extends Controller
             'message' => 'Subscription key created',
             'key' => $subscription->key,
             'type' => $subscription->type,
+            'is_active' => true,
+            'devices_used' => 0,
             'max_devices' => $subscription->max_devices,
             'expires_at' => $subscription->expires_at
+
         ]);
     }
 
@@ -189,13 +322,13 @@ class AdminController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'profileImg' => 'nullable|string',
             'coverImg' => 'nullable|string',
-            'duration' => 'nullable|string',
+            'duration' => 'string',
             'links' => 'nullable|array',
             'links.*' => 'url',
             'content' => 'sometimes|required|string',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
-            'category' => 'nullable|string|max:100',
+            'category' => 'string|max:100',
             'casts' => 'nullable|array',
             'casts.*.name' => 'required_with:casts|string|max:100',
             'casts.*.role' => 'required_with:casts|string|max:100',

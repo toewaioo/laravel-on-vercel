@@ -14,12 +14,12 @@ class ContentSeeder extends Seeder
     public function run(): void
     {
         // Create 100 standard (non-VIP) content items
-        Content::factory()->count(100)->standard()->create();
+        Content::factory()->count(20)->standard()->create();
 
         // Create 30 VIP content items
-        Content::factory()->count(30)->vip()->create();
+        Content::factory()->count(10)->vip()->create();
 
         // Optionally, create a few more with mixed VIP status
-        Content::factory()->count(10)->create(); // Uses the default 30% VIP chance
+        Content::factory()->count(5)->create(); // Uses the default 30% VIP chance
     }
 }

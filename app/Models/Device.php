@@ -14,10 +14,37 @@ class Device extends Model
     protected $fillable = [
         'device_id',
         'api_token',
+        'user_identifier',
+        'device_token',
+        'platform',
+        'os_version',
+        'app_version',
         'is_vip',
+        'vip_expires_at',
         'subscription_key',
-        'vip_expires_at'
+        'last_active_at'
     ];
+
+    protected $casts = [
+        'is_vip' => 'boolean',
+        'vip_expires_at' => 'datetime',
+        'last_active_at' => 'datetime'
+    ];
+    protected $hidden = [
+        'api_token',
+        'device_token',
+        'user_identifier',
+        'subscription_key'
+    ];
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_identifier', 'email');
+    }
+
+    public function views()
+    {
+        return $this->hasMany(ContentView::class);
+    }
 
     public function subscription()
     {
@@ -49,5 +76,18 @@ class Device extends Model
             $this->vip_expires_at === null ||
             $this->vip_expires_at > now()
         );
+    }
+    public function scopeActive($query)
+    {
+        return $query->where('last_active_at', '>', now()->subDays(30));
+    }
+
+    public function scopeVip($query)
+    {
+        return $query->where('is_vip', true)
+            ->where(function ($q) {
+                $q->whereNull('vip_expires_at')
+                    ->orWhere('vip_expires_at', '>', now());
+            });
     }
 }

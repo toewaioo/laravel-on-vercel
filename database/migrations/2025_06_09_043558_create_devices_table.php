@@ -15,8 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('device_id')->unique();
             $table->string('api_token', 64)->unique();
-            $table->string('subscription_key')->nullable();
+            $table->string('user_identifier')->nullable()->comment('References users.email');
             $table->boolean('is_vip')->default(false);
+            $table->string('device_token')->nullable();
+            $table->string('osversion')->nullable();
+            $table->string('appversion')->nullable();
+            $table->string('subscription_key')->nullable()->comment('References subscriptions.key');
+            $table->string('platform')->comment('android, ios, web, desktop');
+            $table->timestamp('last_active_at')->nullable();
             $table->timestamp('vip_expires_at')->nullable();
             $table->timestamps();
         });

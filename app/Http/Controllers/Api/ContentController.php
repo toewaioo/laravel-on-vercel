@@ -135,7 +135,7 @@ class ContentController extends Controller
     public function listContents(Request $request)
     {
         // Show all contents to both normal and VIP users
-        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'isvip', 'created_at')->orderBy('created_at', 'asc')->get();
+        $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content','category','duration', 'isvip', 'created_at')->orderBy('created_at', 'asc')->get();
 
         return response()->json($contents);
     }

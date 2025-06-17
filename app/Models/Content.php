@@ -14,17 +14,22 @@ class Content extends Model
         'title',
         'profileImg',
         'coverImg',
+        'duration',
         'links',
         'content',
         'tags',
-        'isvip',
-        'files'
+        'category',
+        'casts',
+        'files',
+        'isvip'
     ];
 
     protected $casts = [
-        'tags' => 'array',
         'links' => 'array',
+        'tags' => 'array',
+        'casts' => 'array',
         'files' => 'array',
+        'isvip' => 'boolean'
     ];
     // Add this relationship
     public function views()

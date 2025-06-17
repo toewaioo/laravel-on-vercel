@@ -13,12 +13,13 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Middleware\AuthWithToken;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DeviceController;
 
 /*--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------*/
 
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [DeviceController::class, 'register']);
 Route::get('/db-con', function () {
     try {
         $dbconnect = DB::connection()->getPDO();
@@ -37,17 +38,31 @@ Route::prefix('auth')->group(function () {
 
     // Protected routes
     Route::middleware([AuthWithToken::class])->group(function () {
+        //Subscription routes
+        Route::post('/create-key', [AdminController::class, 'createSubscriptionKey']);
+        Route::get('/subscription-keys', [AdminController::class, 'listSubscriptionKeys']);
+        Route::put('/subscriptions/{id}/deactivate', [AdminController::class, 'deactivateSubscription']);
+        //Device routes
+        Route::post('/devices/link', [DeviceController::class, 'linkToUser']);
+        Route::post('/devices/unlink', [DeviceController::class, 'unlink']);
+        Route::put('/devices/{device_id}', [DeviceController::class, 'update']);
+        //
+        Route::get('/devices', [AdminController::class, 'listDevices']);
+        Route::get('/devices/{device_id}', [AdminController::class, 'getDevice']);
+        Route::put('/devices/{device_id}/vip', [AdminController::class, 'setVipStatus']);
+        Route::delete('/devices/{device_id}', [AdminController::class, 'deleteDevice']);
+        //Dashboard
         Route::get('/overview', [DashboardController::class, 'overview']);
         Route::get('/users', [DashboardController::class, 'userAnalytics']);
         Route::get('/content', [DashboardController::class, 'contentAnalytics']);
         Route::get('/subscriptions', [DashboardController::class, 'subscriptionAnalytics']);
-        Route::get('/devices', [DashboardController::class, 'deviceAnalytics']);
+        //Route::get('/devices', [DashboardController::class, 'deviceAnalytics']);
         //
         Route::put('/contents/{id}', [AdminController::class, 'updateContent']);
         Route::delete('/contents/{id}', [AdminController::class, 'deleteContent']);
         Route::post('/contents', [AdminController::class, 'createContent']);
         Route::put('/contents/{id}', [AdminController::class, 'updateContent']);
-        Route::get('/contents/{id}', [ContentController::class, 'getContentDetails'])->where('id', '[0-9]+');
+        Route::get('/contents/{id}', [AdminController::class, 'getContentDetails'])->where('id', '[0-9]+');
         Route::get('/contents', [ContentController::class, 'listContents']);
         Route::get('/subscriptions', [AdminController::class, 'listSubscriptionKeys']);
         Route::post('/logout', [AdminAuthController::class, 'logout']);
@@ -73,6 +88,9 @@ Route::middleware([ApiTokenAuth::class, TrackContentView::class])->group(functio
         ->name('contents')->where('id', '[0-9]+');
 });
 Route::middleware([ApiTokenAuth::class])->group(function () {
+    //device 
+    Route::get('/devices/status', [DeviceController::class, 'status']);
+
     // Content Access
     Route::get('/contents', [ContentController::class, 'listContents']);
     Route::get('/normal-contents', [ContentController::class, 'normalContents']);
