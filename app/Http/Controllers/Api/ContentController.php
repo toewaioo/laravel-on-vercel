@@ -24,6 +24,7 @@ class ContentController extends Controller
         foreach ($categories as $key => $category) {
             $content = Content::where('category', $category)
                 ->select($selectColumns)
+                ->orderBy('created_at', 'desc')
                 ->paginate($perPage, ['*'], 'page', $page);
 
             $results[$key] = $content->items();
