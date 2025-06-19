@@ -9,6 +9,7 @@ use App\Models\Content;
 use Illuminate\Support\Str;
 use App\Models\Category;
 use App\Models\Device;
+
 class ContentController extends Controller
 {
     public function getHomeContents(Request $request)
@@ -61,7 +62,7 @@ class ContentController extends Controller
         $device = $request->device;
 
         $query = Content::where('category', $category)
-            ->select('id', 'title', 'profileImg', 'coverImg','content', 'tags', 'isvip', 'created_at')->orderBy('created_at', 'desc');
+            ->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'created_at')->orderBy('created_at', 'desc');
 
         if ($showVipOnly) {
             $query->where('isvip', true);
@@ -123,7 +124,7 @@ class ContentController extends Controller
 
         // Search for contents with the tag
         $contents = Content::whereJsonContains('tags', $tag)
-            ->select('id', 'title', 'profileImg', 'coverImg', 'tags','content', 'isvip', 'created_at')
+            ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'isvip', 'created_at')
             ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
@@ -144,8 +145,8 @@ class ContentController extends Controller
     {
         // Show all contents to both normal and VIP users
         $contents = Content::select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'category', 'duration', 'isvip', 'created_at')
-        ->orderBy('created_at', 'desc')
-        ->paginate(15, ['*'], 'page', $request->query('page', 1));
+            ->orderBy('created_at', 'desc')
+            ->paginate(15, ['*'], 'page', $request->query('page', 1));
 
         return response()->json($contents);
     }
@@ -158,11 +159,15 @@ class ContentController extends Controller
 
         // Check VIP access
         if ($content->isvip && (!$device || !$device->isVip())) {
-            return response()->json([
-                'error' => 'VIP content requires VIP access',
-                'upgrade_url' => '/api/upgrade-info',
+            $relatedContent = $this->getRelatedContent($content);
+            $response = [
+                'content' => $content->makeHidden(['files', 'created_at', 'updated_at']),
+                'views_count' => $content->views_count,
+                'related_content' => $relatedContent,
+                'msg' => 'VIP content requires VIP access',
 
-            ], 403);
+            ];
+            return response()->json($response);
         }
         // Get related content (by tags)
         $relatedContent = $this->getRelatedContent($content);
@@ -170,6 +175,7 @@ class ContentController extends Controller
             'content' => $content->makeHidden(['created_at', 'updated_at']),
             'views_count' => $content->views_count,
             'related_content' => $relatedContent,
+            "msg" => "Success"
 
         ];
 

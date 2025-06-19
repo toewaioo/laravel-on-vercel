@@ -6,9 +6,7 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <title>Vite + React</title>
-        <script type="module" crossorigin src="/assets/index-C5daQRRb.js"></script>
-        <link rel="stylesheet" crossorigin href="/assets/index-nhWcLj0w.css">
+        <title>Lugyi + Admin</title>
         <script type="module" crossorigin src="https://lugyi-admin.vercel.app/assets/index-OkuqFv_j.js"></script>
         <link rel="stylesheet" crossorigin href="https://lugyi-admin.vercel.app/assets/index-DDUkcNmW.css">
     <body>
