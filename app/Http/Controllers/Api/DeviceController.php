@@ -16,7 +16,7 @@ class DeviceController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'device_id' => 'required|string|max:255|unique:devices',
+            'device_id' => 'required|string|max:255',
             'platform' => 'required|string|in:android,ios,web,desktop',
             'os_version' => 'nullable|string|max:50',
             'app_version' => 'nullable|string|max:50'
@@ -26,6 +26,28 @@ class DeviceController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Check if device already exists
+        $device = Device::where('device_id', $request->device_id)->first();
+
+        if ($device) {
+            // Update last_active_at or other info if needed
+            $device->update([
+                'platform' => $request->platform,
+                'osversion' => $request->os_version,
+                'appversion' => $request->app_version,
+                'last_active_at' => now()
+            ]);
+
+            return response()->json([
+                'device_id' => $device->device_id,
+                'api_token' => $device->api_token,
+                'platform' => $device->platform,
+                'is_vip' => $device->is_vip ?? false,
+                'vip_expires_at' => $device->vip_expires_at ?? null
+            ], 200);
+        }
+
+        // Create new device if not found
         $device = Device::create([
             'device_id' => $request->device_id,
             'api_token' => Device::generateToken(),
@@ -43,6 +65,7 @@ class DeviceController extends Controller
             'vip_expires_at' => null
         ], 201);
     }
+
 
     public function linkToUser(Request $request)
     {
