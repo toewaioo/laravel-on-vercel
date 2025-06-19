@@ -17,7 +17,7 @@ class ContentController extends Controller
         $perPage = (int) $request->query('per_page', 6);
         $page = (int) $request->query('page', 1);
 
-        $categories = ['jav' => 'Jav', 'thai' => 'Thai', 'chinese' => 'Chinese', 'mm_sub' => 'MMsub', 'usa' => 'USA', 'korean' => 'Korean'];
+        $categories = ['jav' => 'Jav', 'thai' => 'Thai', 'chinese' => 'Chinese', 'mm_sub' => 'MMsub', 'usa' => 'USA', 'korea' => 'Korea'];
 
         $selectColumns = ['id', 'title', 'profileImg', 'content', 'tags', 'isvip', 'created_at'];
         $results = [];
