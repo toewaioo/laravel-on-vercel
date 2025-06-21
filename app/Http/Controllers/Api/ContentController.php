@@ -33,10 +33,12 @@ class ContentController extends Controller
             $pagination['total_' . $key] = $content->total();
         }
 
-        $vipContents = Content::where('isvip', true)
-            ->select($selectColumns)
-            ->orderBy('created_at', 'desc')
+        $vipContents = Content::select($selectColumns)
+            ->where('category', "Jav")
+            ->where('isvip', true)
+            ->latest() // shorthand for orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
+
         $categories = Category::all();
         $token = $request->bearerToken();
         $device = Device::where('api_token', $token)->first();
