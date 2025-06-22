@@ -44,7 +44,7 @@ class Subscription extends Model
             case '3months':
                 return now()->addMonths(3);
             case 'lifetime':
-                return null;
+                return now()->addYear(3);
             default:
                 return now()->addMonth();
         }
