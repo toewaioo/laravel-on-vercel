@@ -68,6 +68,8 @@ class ContentController extends Controller
 
         if ($showVipOnly) {
             $query->where('isvip', true);
+        }else{
+            $query->where('isvip', false);
         }
 
         // if (!$device || !$device->isVip()) {
