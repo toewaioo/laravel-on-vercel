@@ -25,6 +25,7 @@ class ContentController extends Controller
 
         foreach ($categories as $key => $category) {
             $content = Content::where('category', $category)
+                ->where('isvip', $category == "USA" ? true : false) // Show only non-VIP content
                 ->select($selectColumns)
                 ->orderBy('created_at', 'desc')
                 ->paginate($perPage, ['*'], 'page', $page);
@@ -68,7 +69,7 @@ class ContentController extends Controller
 
         if ($showVipOnly) {
             $query->where('isvip', true);
-        }else{
+        } else {
             $query->where('isvip', false);
         }
 
