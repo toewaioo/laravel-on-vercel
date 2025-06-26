@@ -7,8 +7,8 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <title>Lugyi + Admin</title>
-        <script type="module" crossorigin src="https://lugyi-admin.vercel.app/assets/index-CHWpk2D8.js"></script>
-        <link rel="stylesheet" crossorigin href="https://lugyi-admin.vercel.app/assets/index-DDUkcNmW.css">
+        <script type="module" crossorigin src="https://lugyi-admin.vercel.app/assets/index-CEGNh7lI.js"></script>
+        <link rel="stylesheet" crossorigin href="https://lugyi-admin.vercel.app/assets/index-BRrj-TXU.css">
     <body>
         <div id="root"></div>
       </body>
