@@ -27,6 +27,7 @@ class CategoryController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'imgUrl' => 'nullable|string',
+            'is_vip' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -66,6 +67,7 @@ class CategoryController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'imgUrl' => 'nullable|string',
+            'is_vip' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {

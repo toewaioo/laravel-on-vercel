@@ -9,6 +9,7 @@ use App\Models\Content;
 use Illuminate\Support\Str;
 use App\Models\Category;
 use App\Models\Device;
+use App\Models\Suggestion;
 
 class ContentController extends Controller
 {
@@ -41,11 +42,13 @@ class ContentController extends Controller
             ->paginate($perPage, ['*'], 'page', $page);
 
         $categories = Category::all();
+        $suggestions = Suggestion::all();
         $token = $request->bearerToken();
         $device = Device::where('api_token', $token)->first();
 
         $results['vip_contents'] = $vipContents->items();
         $results['categories'] = $categories;
+        $results['suggestions'] = $suggestions;
         $results['device'] = $device;
 
         return response()->json(array_merge($results, ['pagination' => $pagination]));

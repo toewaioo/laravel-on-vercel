@@ -18,6 +18,11 @@ use App\Http\Controllers\Api\DeviceController;
 /*--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------*/
+use App\Http\Controllers\Api\SuggestionController;
+
+
+
+//
 
 Route::post('/register', [DeviceController::class, 'register']);
 Route::get('/db-con', function () {
@@ -35,6 +40,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AdminAuthController::class, 'register']);
     Route::post('/login', [AdminAuthController::class, 'login']);
     Route::post('/refresh', [AdminAuthController::class, 'refresh']);
+    Route::apiResource('suggestions', SuggestionController::class); 
 
     // Protected routes
     Route::middleware([AuthWithToken::class])->group(function () {

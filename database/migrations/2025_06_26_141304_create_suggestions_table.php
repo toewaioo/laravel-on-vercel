@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('suggestions', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('imgUrl')->nullable();
-            $table->boolean('is_vip')->default(false);
+            $table->string('contentId');
+            $table->string('imgUrl');
+            $table->string('link')->nullable();
+            $table->boolean('is_ads')->default(false);
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('suggestions');
     }
 };
