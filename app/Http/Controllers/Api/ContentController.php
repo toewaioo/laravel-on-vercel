@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Models\Device;
 use App\Models\Suggestion;
 
+
 class ContentController extends Controller
 {
     public function getHomeContents(Request $request)
@@ -107,16 +108,18 @@ class ContentController extends Controller
 
         // Search for contents with the tag
         $query = Content::whereRaw(
-            "EXISTS (
-                SELECT 1 FROM jsonb_array_elements(casts) AS elem
-                WHERE elem->>'name' = ?
-            )", [$cast]
+            'EXISTS (
+    SELECT 1 
+    FROM jsonb_array_elements(casts) AS cast 
+    WHERE lower(cast->>\'name\') = ?
+)',
+            [strtolower($cast)]
         )
-        ->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'created_at')
-        ->orderBy('created_at', 'desc');
-    
+            ->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'created_at')
+            ->orderBy('created_at', 'desc');
+
         $contents = $query->paginate($perPage, ['*'], 'page', $page);
-    
+
         // $contents = Content::whereJsonContains('casts', $cast)
         //     ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'isvip', 'created_at')
         //     ->paginate($perPage, ['*'], 'page', $page);
