@@ -106,9 +106,20 @@ class ContentController extends Controller
         $page = $request->query('page', 1);
 
         // Search for contents with the tag
-        $contents = Content::whereJsonContains('casts', $cast)
-            ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'isvip', 'created_at')
-            ->paginate($perPage, ['*'], 'page', $page);
+        $query = Content::whereRaw(
+            "EXISTS (
+                SELECT 1 FROM jsonb_array_elements(casts) AS elem
+                WHERE elem->>'name' = ?
+            )", [$cast]
+        )
+        ->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'created_at')
+        ->orderBy('created_at', 'desc');
+    
+        $contents = $query->paginate($perPage, ['*'], 'page', $page);
+    
+        // $contents = Content::whereJsonContains('casts', $cast)
+        //     ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'isvip', 'created_at')
+        //     ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
             'casts' => $cast,
