@@ -107,14 +107,10 @@ class ContentController extends Controller
         $page = $request->query('page', 1);
 
         // Search for contents with the tag
-        $query = Content::whereRaw(
-            'EXISTS (
-    SELECT 1 
-    FROM jsonb_array_elements(casts) AS cast 
-    WHERE lower(cast->>\'name\') = ?
-)',
-            [strtolower($cast)]
-        )
+        $query = Content::whereRaw("EXISTS (
+            SELECT 1 
+            FROM jsonb_array_elements(casts) AS cast 
+            WHERE (cast->>'name') = ?)", [$cast])
             ->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'created_at')
             ->orderBy('created_at', 'desc');
 
