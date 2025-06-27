@@ -110,12 +110,12 @@ class ContentController extends Controller
 
         $perPage = $request->query('per_page', 15);
         $page = $request->query('page', 1);
-        $device = $request->device;
+        $cast = urldecode($cast);
 
         $query = Content::whereJsonContains('casts', $cast)
             ->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'created_at')->orderBy('created_at', 'desc');
 
-        
+
 
         // if (!$device || !$device->isVip()) {
         //     $query->where('isvip', false);
