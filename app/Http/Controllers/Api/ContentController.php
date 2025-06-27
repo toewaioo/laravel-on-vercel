@@ -99,6 +99,42 @@ class ContentController extends Controller
             ]
         ]);
     }
+    public function getContentsByCast(Request $request, $cast)
+    {
+        $request->validate([
+            'per_page' => 'sometimes|integer|min:1|max:100',
+            'page' => 'sometimes|integer|min:1'
+        ]);
+
+        // Proper boolean conversion
+
+        $perPage = $request->query('per_page', 15);
+        $page = $request->query('page', 1);
+        $device = $request->device;
+
+        $query = Content::whereJsonContains('casts', $cast)
+            ->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'created_at')->orderBy('created_at', 'desc');
+
+        
+
+        // if (!$device || !$device->isVip()) {
+        //     $query->where('isvip', false);
+        // }
+        $contents = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'casts' => $cast,
+            'contents' => $contents->items(),
+            'pagination' => [
+                'total' => $contents->total(),
+                'per_page' => $contents->perPage(),
+                'current_page' => $contents->currentPage(),
+                'last_page' => $contents->lastPage(),
+                'from' => $contents->firstItem(),
+                'to' => $contents->lastItem()
+            ]
+        ]);
+    }
 
     // public function getContentsByCategory(Request $request, $category)
     // {
