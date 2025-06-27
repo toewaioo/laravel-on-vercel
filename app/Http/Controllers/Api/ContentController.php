@@ -101,26 +101,14 @@ class ContentController extends Controller
     }
     public function getContentsByCast(Request $request, $cast)
     {
-        $request->validate([
-            'per_page' => 'sometimes|integer|min:1|max:100',
-            'page' => 'sometimes|integer|min:1'
-        ]);
-
-        // Proper boolean conversion
-
+        // Get pagination parameters (default: page=1, per_page=15)
         $perPage = $request->query('per_page', 15);
         $page = $request->query('page', 1);
-        $cast = urldecode($cast);
 
-        $query = Content::whereJsonContains('casts', $cast)
-            ->select('id', 'title', 'profileImg', 'coverImg', 'content', 'tags', 'isvip', 'created_at')->orderBy('created_at', 'desc');
-
-
-
-        // if (!$device || !$device->isVip()) {
-        //     $query->where('isvip', false);
-        // }
-        $contents = $query->paginate($perPage, ['*'], 'page', $page);
+        // Search for contents with the tag
+        $contents = Content::whereJsonContains('casts', $cast)
+            ->select('id', 'title', 'profileImg', 'coverImg', 'tags', 'content', 'isvip', 'created_at')
+            ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
             'casts' => $cast,

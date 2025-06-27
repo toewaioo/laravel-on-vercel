@@ -103,7 +103,7 @@ Route::middleware([ApiTokenAuth::class])->group(function () {
     Route::get('/contents/{id}/views', [ContentController::class, 'getContentViews']);
     // Route::get('/contents/{id}', [ContentController::class, 'getContentDetails'])->where('id', '[0-9]+');
     Route::get('/contents/tag/{tag}', [ContentController::class, 'getContentsByTag']);
-    Route::get('/contents/casts/{cast}', [ContentController::class, 'getContentsByCast']);
+    Route::get('/contents/cast/{cast}', [ContentController::class, 'getContentsByCast']);
     Route::get('/contents/category/{category}', [ContentController::class, 'getContentsByCategory']);
     Route::get('/contents/search', [ContentController::class, 'searchContents']);
     Route::get('/contents/latest', [ContentController::class, 'latestContents']);
